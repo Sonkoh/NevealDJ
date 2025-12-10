@@ -1,0 +1,10 @@
+{
+  "name": "nevealdj-ux-backend",
+  "version": "0.1.0",
+  "private": true,
+  "main": "test.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test.js"
+  }
+}
