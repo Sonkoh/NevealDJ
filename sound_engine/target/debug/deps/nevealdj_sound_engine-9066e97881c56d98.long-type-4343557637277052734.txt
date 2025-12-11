@@ -1,0 +1,1 @@
+for<'a> fn(&'a str) -> std::result::Result<f64, <f64 as FromStr>::Err> {core::str::<impl str>::parse::<f64>}

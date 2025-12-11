@@ -2,7 +2,7 @@ const { ipcMain, BrowserWindow } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const fsp = require("node:fs/promises");
-const { DjEngine, init } = require("../sound_engine");
+const { DjEngine, init, getTrackMetadata, updateTrackMetadata } = require("../sound_engine");
 
 init();
 
@@ -58,14 +58,22 @@ const listDirectories = async (targetPath) => {
         .filter((entry) => SUPPORTED_AUDIO_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
         .map((entry) => {
             const fullPath = path.join(basePath, entry.name);
-            const title = path.basename(entry.name, path.extname(entry.name));
+            let metadata = null;
+            try {
+                metadata = getTrackMetadata(fullPath);
+            } catch (error) {
+                console.warn("[metadata] Failed to read tags for", fullPath, error?.message ?? error);
+            }
             return {
                 name: entry.name,
                 path: fullPath,
-                title,
-                artist: "Desconocido",
-                bpm: "--",
-                duration: "--",
+                title:
+                    metadata?.title ??
+                    path.basename(entry.name, path.extname(entry.name)),
+                artist: metadata?.artist ?? null,
+                bpm: metadata?.bpm ?? null,
+                durationSeconds: metadata?.durationSeconds ?? null,
+                hotCues: metadata?.hotCues ?? [],
             };
         })
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -127,6 +135,29 @@ module.exports = () => {
         } catch (error) {
             throw new Error(`Failed to read directory: ${(error && error.message) || "unknown error"}`);
         }
+    });
+
+    ipcMain.handle("metadata:get-track", (_, filePath) => {
+        const resolvedPath = resolveFilePath(filePath);
+        if (!resolvedPath) {
+            throw new Error("File path is required");
+        }
+        return getTrackMetadata(resolvedPath);
+    });
+
+    ipcMain.handle("metadata:update-track", (_, payload) => {
+        if (!payload || !payload.filePath) {
+            throw new Error("filePath is required");
+        }
+        const resolvedPath = resolveFilePath(payload.filePath);
+        if (!resolvedPath) {
+            throw new Error("Unable to resolve file path");
+        }
+        const updates = payload.updates || payload.metadata;
+        if (!updates) {
+            throw new Error("No metadata updates provided");
+        }
+        return updateTrackMetadata(resolvedPath, updates);
     });
 
     loadTestDeck();

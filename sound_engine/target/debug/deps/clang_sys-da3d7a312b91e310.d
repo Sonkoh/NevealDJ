@@ -1,0 +1,14 @@
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/deps/clang_sys-da3d7a312b91e310.d: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/support.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/link.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/macros.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/common.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/dynamic.rs
+
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/deps/libclang_sys-da3d7a312b91e310.rlib: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/support.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/link.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/macros.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/common.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/dynamic.rs
+
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/deps/libclang_sys-da3d7a312b91e310.rmeta: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/support.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/link.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/macros.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/common.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/dynamic.rs
+
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/lib.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/support.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.8.1/src/link.rs:
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/macros.rs:
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/common.rs:
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out/dynamic.rs:
+
+# env-dep:OUT_DIR=/Users/sonkoh/Documents/nevealdj/sound_engine/target/debug/build/clang-sys-75cc36d4d38b56bb/out

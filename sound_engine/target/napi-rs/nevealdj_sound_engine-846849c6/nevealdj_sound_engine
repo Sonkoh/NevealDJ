@@ -1,0 +1,11 @@
+{"kind": "fn", "name": "init", "js_doc": "", "def": "function init(): void"}
+{"kind": "interface", "name": "DeckState", "js_doc": "", "def": "id: number\\nvolume: number\\nisPlaying: boolean\\nloadedTrack?: string", "original_name": "DeckState"}
+{"kind": "interface", "name": "MixerState", "js_doc": "", "def": "masterVolume: number\\ndeckChannels: Array<number>", "original_name": "MixerState"}
+{"kind": "interface", "name": "EngineState", "js_doc": "", "def": "mixer: MixerState\\ndecks: Array<DeckState>", "original_name": "EngineState"}
+{"kind": "struct", "name": "DjEngine", "js_doc": "", "def": "", "original_name": "DjEngine"}
+{"kind": "impl", "name": "DjEngine", "js_doc": "", "def": " constructor()\\n ping(): string\\n getDecks(): Array<DeckState>\\n getMixer(): MixerState\\n getState(): EngineState\\n getDeck(deckId: number): DeckState | null\\n loadTrack(deckId: number, filePath: string): void\\n toggleDeckPlayback(deckId: number): DeckState"}
+{"kind": "interface", "name": "HotCueMetadata", "js_doc": "", "def": "positionSeconds: number\\nlabel?: string", "original_name": "HotCueMetadata"}
+{"kind": "interface", "name": "TrackMetadata", "js_doc": "", "def": "path: string\\ntitle: string\\nartist?: string\\nbpm?: number\\ndurationSeconds?: number\\nhotCues: Array<HotCueMetadata>", "original_name": "TrackMetadata"}
+{"kind": "interface", "name": "TrackMetadataUpdate", "js_doc": "", "def": "title?: string\\nartist?: string\\nbpm?: number\\nhotCues?: Array<HotCueMetadata>", "original_name": "TrackMetadataUpdate"}
+{"kind": "fn", "name": "getTrackMetadata", "js_doc": "", "def": "function getTrackMetadata(filePath: string): TrackMetadata"}
+{"kind": "fn", "name": "updateTrackMetadata", "js_doc": "", "def": "function updateTrackMetadata(filePath: string, updates: TrackMetadataUpdate): TrackMetadata"}

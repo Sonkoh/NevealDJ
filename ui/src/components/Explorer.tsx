@@ -1,6 +1,11 @@
 
 import { useEffect, useState } from "react";
 
+type HotCueMetadata = {
+    positionSeconds: number;
+    label?: string | null;
+};
+
 type DirectoryNode = {
     name: string;
     path: string;
@@ -13,7 +18,35 @@ type DirectoryNode = {
 type DirectoryListResponse = {
     path: string;
     parent: string | null;
+    files?: ExplorerFile[];
     directories: Array<{ name: string; path: string }>;
+};
+
+type ExplorerFile = {
+    name: string;
+    path: string;
+    title: string;
+    artist?: string | null;
+    bpm?: number | null;
+    durationSeconds?: number | null;
+    hotCues: HotCueMetadata[];
+};
+
+const formatBpm = (value?: number | null) => {
+    if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+        return "--";
+    }
+    return value.toFixed(2);
+};
+
+const formatDuration = (value?: number | null) => {
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        return "--:--";
+    }
+    const totalSeconds = Math.max(0, Math.floor(value));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 const createNode = (name: string, pathValue: string): DirectoryNode => ({
@@ -60,7 +93,7 @@ const findNode = (node: DirectoryNode | null, targetPath: string): DirectoryNode
 function Explorer() {
     const [rootNode, setRootNode] = useState<DirectoryNode | null>(null);
     const [selectedPath, setSelectedPath] = useState<string | null>(null);
-    const [selectedFiles, setSelectedFiles] = useState<Array<{ name: string; path: string }>>([]);
+    const [selectedFiles, setSelectedFiles] = useState<ExplorerFile[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -175,10 +208,10 @@ function Explorer() {
                     <table className="w-full text-left text-sm">
                         <thead className="text-gray-400">
                             <tr>
-                                <th className="py-1 px-3">Título</th>
-                                <th className="py-1 px-3">Artista</th>
+                                <th className="py-1 px-3">Title</th>
+                                <th className="py-1 px-3">Artist</th>
                                 <th className="py-1 px-3">BPM</th>
-                                <th className="py-1 px-3">Tiempo</th>
+                                <th className="py-1 px-3">Time</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -191,10 +224,10 @@ function Explorer() {
                             ) : (
                                 selectedFiles.map((file) => (
                                     <tr key={file.path} className="border-b border-white/5 hover:bg-white/5 cursor-pointer">
-                                        <td className="py-2 px-3">{file.name.replace(/\.[^.]+$/, '')}</td>
-                                        <td className="py-2 px-3 text-gray-400">Desconocido</td>
-                                        <td className="py-2 px-3">--</td>
-                                        <td className="py-2 px-3">--:--</td>
+                                        <td className="py-2 px-3">{file.title || file.name.replace(/\.[^.]+$/, "")}</td>
+                                        <td className="py-2 px-3 text-gray-300">{file.artist?.trim() || "Desconocido"}</td>
+                                        <td className="py-2 px-3">{formatBpm(file.bpm)}</td>
+                                        <td className="py-2 px-3">{formatDuration(file.durationSeconds)}</td>
                                     </tr>
                                 ))
                             )}

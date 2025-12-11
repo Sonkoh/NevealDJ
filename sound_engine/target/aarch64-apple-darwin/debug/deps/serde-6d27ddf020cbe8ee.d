@@ -1,0 +1,14 @@
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/deps/serde-6d27ddf020cbe8ee.d: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/build/serde-39313b3c86a3d8e3/out/private.rs
+
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/deps/libserde-6d27ddf020cbe8ee.rlib: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/build/serde-39313b3c86a3d8e3/out/private.rs
+
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/deps/libserde-6d27ddf020cbe8ee.rmeta: /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/build/serde-39313b3c86a3d8e3/out/private.rs
+
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/sonkoh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/build/serde-39313b3c86a3d8e3/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/sonkoh/Documents/nevealdj/sound_engine/target/aarch64-apple-darwin/debug/build/serde-39313b3c86a3d8e3/out
