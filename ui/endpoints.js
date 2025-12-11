@@ -1,6 +1,7 @@
 const { ipcMain, BrowserWindow } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
+const fsp = require("node:fs/promises");
 const { DjEngine, init } = require("../sound_engine");
 
 init();
@@ -8,6 +9,7 @@ init();
 const engine = new DjEngine();
 const projectRoot = path.join(__dirname, "..");
 const filesDir = path.join(projectRoot, "files");
+const systemRoot = path.parse(process.cwd()).root || path.sep;
 
 const resolveFilePath = (filePath) => {
     if (!filePath) return null;
@@ -36,6 +38,20 @@ const broadcastEngineState = () => {
     BrowserWindow.getAllWindows().forEach((win) => {
         win.webContents.send("engine:state", state);
     });
+};
+
+const listDirectories = async (targetPath) => {
+    const basePath = targetPath ? path.resolve(targetPath) : systemRoot;
+    const entries = await fsp.readdir(basePath, { withFileTypes: true });
+    const directories = entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => ({
+            name: entry.name,
+            path: path.join(basePath, entry.name),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    const parent = path.resolve(basePath) === systemRoot ? null : path.dirname(basePath);
+    return { path: basePath, parent, directories };
 };
 
 module.exports = () => {
@@ -84,6 +100,14 @@ module.exports = () => {
         const deckState = engine.toggleDeckPlayback(id);
         broadcastEngineState();
         return deckState;
+    });
+
+    ipcMain.handle("explorer:list-directories", async (_, targetPath) => {
+        try {
+            return await listDirectories(targetPath);
+        } catch (error) {
+            throw new Error(`Failed to read directory: ${(error && error.message) || "unknown error"}`);
+        }
     });
 
     loadTestDeck();

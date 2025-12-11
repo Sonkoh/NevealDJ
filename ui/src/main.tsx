@@ -34,11 +34,10 @@ createRoot(rootElement).render(
     ) : (
       <>
         <TopBar />
-        <main className="h-full">
+        <main className="h-full flex flex-col min-h-0">
           <System />
           <Explorer />
         </main>
-        <BottomBar />
       </>
     )}
   </StrictMode>,
