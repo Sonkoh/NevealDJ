@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent } from "react";
+import { useState, useRef, MouseEvent, useEffect } from "react";
 import Icon from "./Icon";
 import expandWindow from "../hooks/ExpandWindow";
 
@@ -7,13 +7,55 @@ type DeckProps = {
     disableExpand?: boolean;
 };
 
+type DeckState = {
+    id: number;
+    volume: number;
+    isPlaying: boolean;
+    loadedTrack?: string | null;
+};
+
 function Deck({ id, disableExpand = false }: DeckProps) {
     const deckElement = useRef<HTMLElement>(null);
-    const [deckData, setDeckData] = useState({});
+    const [deckData, setDeckData] = useState<DeckState | null>(null);
+    const deckId = id;
 
-    async () => {
-        setDeckData(await (window as any).nevealdj.getDeck(id));
+    const requestDeckState = async () => {
+        try {
+            const data = await (window as any).nevealdj?.getDeck?.(deckId);
+            return data ?? null;
+        } catch (error) {
+            console.error("failed to retrieve deck info", error);
+            return null;
+        }
     };
+
+    useEffect(() => {
+        let isMounted = true;
+        const load = async () => {
+            const data = await requestDeckState();
+            if (isMounted) {
+                setDeckData(data);
+            }
+        };
+        load();
+
+        let unsubscribe: (() => void) | undefined;
+        if ((window as any).nevealdj?.subscribeToEngineState) {
+            unsubscribe = (window as any).nevealdj.subscribeToEngineState((state: any) => {
+                const updated = state?.decks?.find?.((deck: DeckState) => deck.id === Number(deckId));
+                if (updated) {
+                    setDeckData(updated);
+                }
+            });
+        }
+
+        return () => {
+            isMounted = false;
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [deckId]);
 
     const handleExpand = (event: MouseEvent<HTMLButtonElement>) => {
         if (disableExpand) {
@@ -24,6 +66,17 @@ function Deck({ id, disableExpand = false }: DeckProps) {
             x: event.nativeEvent.screenX,
             y: event.nativeEvent.screenY,
         });
+    };
+
+    const handlePlaybackToggle = async () => {
+        try {
+            const updated = await (window as any).nevealdj?.toggleDeckPlayback?.(deckId);
+            if (updated) {
+                setDeckData(updated);
+            }
+        } catch (error) {
+            console.error("failed to toggle playback", error);
+        }
     };
 
     return (
@@ -54,12 +107,20 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                             </span>
                         </h1>
                         <p className="text-[.9em] font-boblackld text-orange-200">07:29 129<span className="text-[.8em]">BPM</span> Cm</p>
+                        <p className="text-[.7em] text-gray-400 mt-1">
+                            {deckData?.loadedTrack ? `Track: ${deckData.loadedTrack}` : "Track: --"}
+                        </p>
                     </div>
                 </div>
             </main>
             <main className={(parseInt(id.toString())) % 2 == 1 ? 'flex-row-reverse' : 'flex-row'}>
                 <div>
-                    <button>plei</button>
+                    <button
+                        className="px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handlePlaybackToggle}
+                    >
+                        {deckData?.isPlaying ? "Pause" : "Play"}
+                    </button>
                     <div className="grid grid-cols-1 grid-rows-1">
                         <div className="col-start-1 row-start-1 size-12 rounded-full border-4 border-gray-100 dark:border-gray-700">
 
