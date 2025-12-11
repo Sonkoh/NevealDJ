@@ -60,6 +60,7 @@ const findNode = (node: DirectoryNode | null, targetPath: string): DirectoryNode
 function Explorer() {
     const [rootNode, setRootNode] = useState<DirectoryNode | null>(null);
     const [selectedPath, setSelectedPath] = useState<string | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<Array<{ name: string; path: string }>>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -76,6 +77,7 @@ function Explorer() {
                     children,
                 });
                 setSelectedPath(response?.path || "/");
+                setSelectedFiles(response?.files ?? []);
                 setError(null);
             } catch (err) {
                 setError((err as Error).message);
@@ -92,18 +94,26 @@ function Explorer() {
             return;
         }
 
-        if (existingNode.hasLoadedChildren) {
-            setRootNode((prev) => (prev ? updateNode(prev, pathValue, (node) => ({ ...node, isExpanded: !node.isExpanded })) : prev));
+        const willCollapse = existingNode.isExpanded && existingNode.hasLoadedChildren;
+        if (willCollapse) {
+            setRootNode((prev) =>
+                prev
+                    ? updateNode(prev, pathValue, (node) => ({
+                          ...node,
+                          isExpanded: false,
+                      }))
+                    : prev,
+            );
             return;
         }
 
         setRootNode((prev) =>
             prev
                 ? updateNode(prev, pathValue, (node) => ({
-                    ...node,
-                    isExpanded: true,
-                    isLoading: true,
-                }))
+                      ...node,
+                      isExpanded: true,
+                      isLoading: !node.hasLoadedChildren,
+                  }))
                 : prev,
         );
 
@@ -113,22 +123,23 @@ function Explorer() {
             setRootNode((prev) =>
                 prev
                     ? updateNode(prev, pathValue, (node) => ({
-                        ...node,
-                        isExpanded: true,
-                        isLoading: false,
-                        hasLoadedChildren: true,
-                        children,
-                    }))
+                          ...node,
+                          isExpanded: true,
+                          isLoading: false,
+                          hasLoadedChildren: true,
+                          children,
+                      }))
                     : prev,
             );
+            setSelectedFiles(response?.files ?? []);
             setError(null);
         } catch (err) {
             setRootNode((prev) =>
                 prev
                     ? updateNode(prev, pathValue, (node) => ({
-                        ...node,
-                        isLoading: false,
-                    }))
+                          ...node,
+                          isLoading: false,
+                      }))
                     : prev,
             );
             setError((err as Error).message);
@@ -142,7 +153,7 @@ function Explorer() {
         <div key={node.path} className="text-sm">
             <button
                 onClick={() => handleToggleNode(node.path)}
-                className={`w-full text-left flex items-center gap-2 py-1 px-2 border-0 ${selectedPath === node.path ? "module text-white" : "text-gray-200 module-1 hover:bg-white/5"
+                className={`w-full text-left flex items-center gap-2 py-1 px-2 border-0 cursor-pointer ${selectedPath === node.path ? "module text-white" : "text-gray-200 module-1 hover:bg-white/5"
                     }`}
                 style={{ paddingLeft: depth * 12 + 8 }}
             >
@@ -160,8 +171,35 @@ function Explorer() {
                 <div className="module-1 w-[320px] h-full overflow-y-scroll">
                     {rootNode ? renderNode(rootNode) : <div className="p-3 text-sm text-gray-400">Cargando árbol...</div>}
                 </div>
-                <div className="module-1 flex-1 h-full px-4 py-2 text-sm overflow-auto">
-                    ...
+                <div className="module-1 flex-1 h-full text-sm overflow-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="text-gray-400">
+                            <tr>
+                                <th className="py-1 px-3">Título</th>
+                                <th className="py-1 px-3">Artista</th>
+                                <th className="py-1 px-3">BPM</th>
+                                <th className="py-1 px-3">Tiempo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedFiles.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="py-2 px-3 text-gray-500 text-sm">
+                                        No hay archivos .mp3 o .wav en esta carpeta.
+                                    </td>
+                                </tr>
+                            ) : (
+                                selectedFiles.map((file) => (
+                                    <tr key={file.path} className="border-b border-white/5 hover:bg-white/5 cursor-pointer">
+                                        <td className="py-2 px-3">{file.name.replace(/\.[^.]+$/, '')}</td>
+                                        <td className="py-2 px-3 text-gray-400">Desconocido</td>
+                                        <td className="py-2 px-3">--</td>
+                                        <td className="py-2 px-3">--:--</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div className="module-1">

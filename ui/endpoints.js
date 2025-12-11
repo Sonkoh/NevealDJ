@@ -40,18 +40,37 @@ const broadcastEngineState = () => {
     });
 };
 
+const SUPPORTED_AUDIO_EXTENSIONS = new Set([".mp3", ".wav"]);
+
 const listDirectories = async (targetPath) => {
     const basePath = targetPath ? path.resolve(targetPath) : systemRoot;
     const entries = await fsp.readdir(basePath, { withFileTypes: true });
     const directories = entries
         .filter((entry) => entry.isDirectory())
+        .filter((entry) => !entry.name.startsWith("."))
         .map((entry) => ({
             name: entry.name,
             path: path.join(basePath, entry.name),
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
+    const files = entries
+        .filter((entry) => entry.isFile())
+        .filter((entry) => SUPPORTED_AUDIO_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+        .map((entry) => {
+            const fullPath = path.join(basePath, entry.name);
+            const title = path.basename(entry.name, path.extname(entry.name));
+            return {
+                name: entry.name,
+                path: fullPath,
+                title,
+                artist: "Desconocido",
+                bpm: "--",
+                duration: "--",
+            };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
     const parent = path.resolve(basePath) === systemRoot ? null : path.dirname(basePath);
-    return { path: basePath, parent, directories };
+    return { path: basePath, parent, directories, files };
 };
 
 module.exports = () => {
