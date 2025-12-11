@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent, useEffect } from "react";
+import { useState, useRef, MouseEvent, useEffect, PointerEvent as ReactPointerEvent } from "react";
 import Icon from "./Icon";
 import expandWindow from "../hooks/ExpandWindow";
 
@@ -17,6 +17,8 @@ type DeckState = {
 function Deck({ id, disableExpand = false }: DeckProps) {
     const deckElement = useRef<HTMLElement>(null);
     const [deckData, setDeckData] = useState<DeckState | null>(null);
+    const [pitch, setPitch] = useState<number>(0);
+    const faderTrackRef = useRef<HTMLDivElement>(null);
     const deckId = id;
 
     const requestDeckState = async () => {
@@ -57,6 +59,9 @@ function Deck({ id, disableExpand = false }: DeckProps) {
         };
     }, [deckId]);
 
+    const clampValue = (value: number, min: number, max: number) =>
+        Math.min(max, Math.max(min, value));
+
     const handleExpand = (event: MouseEvent<HTMLButtonElement>) => {
         if (disableExpand) {
             return;
@@ -78,6 +83,37 @@ function Deck({ id, disableExpand = false }: DeckProps) {
             console.error("failed to toggle playback", error);
         }
     };
+
+    const updatePitchFromPointer = (clientY: number) => {
+        const track = faderTrackRef.current;
+        if (!track) return;
+        const rect = track.getBoundingClientRect();
+        const relativeY = clampValue(clientY - rect.top, 0, rect.height);
+        const percent = 1 - relativeY / rect.height;
+        const newPitch = Math.round(percent * 100 - 50);
+        setPitch(newPitch);
+    };
+
+    const handlePitchPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        updatePitchFromPointer(event.clientY);
+
+        const handleMove = (moveEvent: PointerEvent) => {
+            moveEvent.preventDefault();
+            updatePitchFromPointer(moveEvent.clientY);
+        };
+
+        const handleUp = () => {
+            window.removeEventListener("pointermove", handleMove);
+            window.removeEventListener("pointerup", handleUp);
+        };
+
+        window.addEventListener("pointermove", handleMove);
+        window.addEventListener("pointerup", handleUp);
+    };
+
+    const faderPositionPercent = ((50 - pitch) / 100) * 100;
 
     return (
         <main className="w-full" ref={deckElement}>
@@ -113,20 +149,80 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                     </div>
                 </div>
             </main>
+            <main className="flex-row">
+                {["A", "B", "C", "D", "E", "F", "G", "H"].map((hotCue) => (
+                    <div key={hotCue} className="module-1 flex-1 cursor-pointer px-2 pt-2 active:bg-[#0e1116]">
+                        <div className="h-px w-full bg-white"></div>
+                        <div className="py-1 text-[.8em]">{hotCue}</div>
+                    </div>
+                ))}
+            </main>
             <main className={(parseInt(id.toString())) % 2 == 1 ? 'flex-row-reverse' : 'flex-row'}>
-                <div className="module">
-                    <button
-                        className="px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={handlePlaybackToggle}
+                <div className="module flex flex-col items-center py-2 px-4 w-24 select-none">
+                    <div
+                        ref={faderTrackRef}
+                        className="relative flex-1 w-6 my-2 cursor-grab active:cursor-grabbing"
+                        onPointerDown={handlePitchPointerDown}
                     >
-                        {deckData?.isPlaying ? "Pause" : "Play"}
-                    </button>
-                    <div className="grid grid-cols-1 grid-rows-1">
-                        <div className="col-start-1 row-start-1 size-12 rounded-full border-4 border-gray-100 dark:border-gray-700">
-
+                        <div className="absolute inset-x-1/2 -translate-x-1/2 h-full w-[2px] bg-gray-700" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-between pointer-events-none">
+                            {[...Array(11)].map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`h-[1px] ${idx === 5 ? "w-6 bg-white" : "w-4 bg-gray-500"}`}
+                                />
+                            ))}
                         </div>
-                        <div className="col-start-1 row-start-1 size-12 rounded-full border-4 border-amber-500 mask-conic-from-75% mask-conic-to-75% dark:border-amber-400">
+                        <div
+                            className="absolute left-1/2 w-10 h-3 bg-white rounded shadow-lg -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                            style={{ top: `${faderPositionPercent}%` }}
+                        />
+                    </div>
+                    <b className="text-[.6em] text-gray-500">TEMPO</b>
+                </div>
+                <div className="module flex p-2">
+                    <div className="flex flex-col justify-end relative z-10 gap-1">
+                        <button className="rounded-full border bg-transparent size-5 flex items-center justify-center cursor-pointer">
+                            <b className="text-[.5em]">CUE</b>
+                        </button>
+                        <button className="rounded-full border bg-transparent size-5 flex items-center justify-center cursor-pointer" onClick={handlePlaybackToggle}>
+                            <Icon name={deckData?.isPlaying ? "stop_solid" : "play_solid"} className="size-4 text-white" />
+                        </button>
+                    </div>
+                    <div className="pt-6 pb-6 px-4">
+                        <div className="absolute size-[150px]">
+                            <svg className="relative -left-6.25 -top-6.25"
+                                viewBox="0 0 100 100"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path fill="transparent"
+                                    id="circlePath"
+                                    d="M 10, 50 a 40,40 0 1,1 80,0 40,40 0 1,1 -80,0"
+                                />
+                                <path fill="transparent"
+                                    id="circlePathReverse"
+                                    d="M 10, 50 a 40,40 0 1,0 80,0 40,40 0 1,0 -80,0"
+                                />
+                                <text className="text-[.4em]"
+                                    textAnchor="middle"
+                                    dominantBaseline="middle">
+                                    <textPath href="#circlePath" fill="#999" startOffset='25%'>
+                                        SLIP   REV   VINYL
+                                    </textPath>
+                                </text>
+                                <text className="text-[.4em]"
+                                    textAnchor="middle"
+                                    dominantBaseline="middle">
+                                    <textPath href="#circlePathReverse" fill="#999" startOffset='25%'>
+                                        SYNC          MASTER
+                                    </textPath>
+                                </text>
+                            </svg>
+                        </div>
+                        <div className="module-1 rounded-full shadow-lg">
+                            <div className="col-start-1 row-start-1 size-[100px] rounded-full border-9 border-white mask-conic-from-95% mask-conic-to-95% cursor-grab active:cursor-grabbing">
 
+                            </div>
                         </div>
                     </div>
                 </div>

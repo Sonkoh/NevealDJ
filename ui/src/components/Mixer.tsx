@@ -1,7 +1,7 @@
 
 function Mixer() {
     return (
-        <div className="module w-[300px] h-full">
+        <div className="module-1 w-[300px] h-full">
         </div>
     );
 }
