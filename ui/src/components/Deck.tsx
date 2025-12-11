@@ -114,7 +114,7 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                 </div>
             </main>
             <main className={(parseInt(id.toString())) % 2 == 1 ? 'flex-row-reverse' : 'flex-row'}>
-                <div>
+                <div className="module">
                     <button
                         className="px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handlePlaybackToggle}
@@ -130,6 +130,7 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                         </div>
                     </div>
                 </div>
+                <div className="module w-full h-full">...</div>
             </main>
         </main>
     );

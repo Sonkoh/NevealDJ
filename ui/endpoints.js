@@ -86,6 +86,6 @@ module.exports = () => {
         return deckState;
     });
 
-    loadTestDeck();
+    // loadTestDeck();
     broadcastEngineState();
 };
