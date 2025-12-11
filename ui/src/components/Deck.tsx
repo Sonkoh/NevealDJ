@@ -169,12 +169,12 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                             {[...Array(11)].map((_, idx) => (
                                 <div
                                     key={idx}
-                                    className={`h-[1px] ${idx === 5 ? "w-6 bg-white" : "w-4 bg-gray-500"}`}
+                                    className={`h-[1px] ${idx === 5 ? "w-4 bg-white" : "w-2 bg-gray-500"}`}
                                 />
                             ))}
                         </div>
                         <div
-                            className="absolute left-1/2 w-8 h-2 bg-white rounded-xs shadow-lg -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                            className="absolute left-1/2 w-6 h-2 bg-white rounded-xs shadow-lg -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                             style={{ top: `${faderPositionPercent}%` }}
                         />
                     </div>

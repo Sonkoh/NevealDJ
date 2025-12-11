@@ -9,6 +9,7 @@ export declare class DjEngine {
   getDeck(deckId: number): DeckState | null
   loadTrack(deckId: number, filePath: string): void
   toggleDeckPlayback(deckId: number): DeckState
+  setDeckVolume(deckId: number, volume: number): DeckState
 }
 
 export interface DeckState {

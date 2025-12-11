@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import Explorer from './components/Explorer.tsx';
+import Browser from './components/Browser.tsx';
 import TopBar from './components/TopBar.tsx';
 import BottomBar from './components/BottomBar.tsx';
 import System from './components/System.tsx';
@@ -36,7 +36,7 @@ createRoot(rootElement).render(
         <TopBar />
         <main className="h-full flex flex-col min-h-0">
           <System />
-          <Explorer />
+          <Browser />
         </main>
       </>
     )}

@@ -51,6 +51,7 @@ impl Deck {
 
         sink.append(source);
         sink.pause();
+        sink.set_volume(self.volume);
 
         self.sink = Some(sink);
         self.track_path = Some(track_path.to_path_buf());
@@ -80,6 +81,14 @@ impl Deck {
                 sink.play();
                 self.is_playing = true;
             }
+        }
+    }
+
+    pub fn set_volume(&mut self, volume: f32) {
+        let clamped = volume.clamp(0.0, 1.0);
+        self.volume = clamped;
+        if let Some(sink) = self.sink.as_ref() {
+            sink.set_volume(clamped);
         }
     }
 }

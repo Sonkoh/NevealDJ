@@ -3,6 +3,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const { DjEngine, init, getTrackMetadata, updateTrackMetadata } = require("../sound_engine");
+const { loadConfig } = require("./config");
 
 init();
 
@@ -129,7 +130,22 @@ module.exports = () => {
         return deckState;
     });
 
-    ipcMain.handle("explorer:list-directories", async (_, targetPath) => {
+    ipcMain.handle("engine:set-deck-volume", (_, payload) => {
+        const id = Number(payload?.deckId);
+        const volume = Number(payload?.volume);
+        if (!id || id < 1 || id > 6) {
+            throw new Error("Invalid deck id");
+        }
+        if (!Number.isFinite(volume)) {
+            throw new Error("Invalid volume value");
+        }
+        const normalized = Math.max(0, Math.min(1, volume));
+        const deckState = engine.setDeckVolume(id, normalized);
+        broadcastEngineState();
+        return deckState;
+    });
+
+    ipcMain.handle("browser:list-directories", async (_, targetPath) => {
         try {
             return await listDirectories(targetPath);
         } catch (error) {
@@ -160,6 +176,10 @@ module.exports = () => {
         return updateTrackMetadata(resolvedPath, updates);
     });
 
-    loadTestDeck();
+    ipcMain.handle("config:get", () => {
+        return loadConfig();
+    });
+
+    // loadTestDeck();
     broadcastEngineState();
 };

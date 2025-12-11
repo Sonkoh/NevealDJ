@@ -169,6 +169,17 @@ impl DjEngine {
         deck.toggle_playback();
         Ok(DeckState::from(&*deck))
     }
+
+    #[napi]
+    pub fn set_deck_volume(&mut self, deck_id: u8, volume: f64) -> Result<DeckState> {
+        if !volume.is_finite() {
+            return Err(Error::from_reason("Volume must be a finite number".to_string()));
+        }
+        let deck = self.deck_mut(deck_id)?;
+        let normalized = volume.max(0.0).min(1.0) as f32;
+        deck.set_volume(normalized);
+        Ok(DeckState::from(&*deck))
+    }
 }
 
 const HOT_CUES_STORAGE_KEY: &str = "NEVEALDJ::HOTCUES";
