@@ -165,6 +165,20 @@ module.exports = () => {
         return deckState;
     });
 
+    ipcMain.handle("engine:set-deck-pitch", (_, payload) => {
+        const id = Number(payload?.deckId);
+        const pitch = Number(payload?.pitchPercent);
+        if (!id || id < 1 || id > 6) {
+            throw new Error("Invalid deck id");
+        }
+        if (!Number.isFinite(pitch)) {
+            throw new Error("Invalid pitch value");
+        }
+        const deckState = engine.setDeckPitch(id, pitch);
+        broadcastEngineState();
+        return deckState;
+    });
+
     ipcMain.handle("browser:list-directories", async (_, targetPath) => {
         try {
             return await listDirectories(targetPath);

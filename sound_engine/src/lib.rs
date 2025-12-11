@@ -29,6 +29,7 @@ pub fn init() -> Result<()> {
 pub struct DeckState {
     pub id: u8,
     pub volume: f64,
+    pub pitch_percent: f64,
     pub is_playing: bool,
     pub loaded_track: Option<String>,
 }
@@ -38,6 +39,7 @@ impl From<&Deck> for DeckState {
         Self {
             id: deck.id(),
             volume: deck.volume() as f64,
+            pitch_percent: deck.pitch_percent() as f64,
             is_playing: deck.is_playing(),
             loaded_track: deck.loaded_track().cloned(),
         }
@@ -178,6 +180,17 @@ impl DjEngine {
         let deck = self.deck_mut(deck_id)?;
         let normalized = volume.max(0.0).min(1.0) as f32;
         deck.set_volume(normalized);
+        Ok(DeckState::from(&*deck))
+    }
+
+    #[napi]
+    pub fn set_deck_pitch(&mut self, deck_id: u8, pitch_percent: f64) -> Result<DeckState> {
+        if !pitch_percent.is_finite() {
+            return Err(Error::from_reason("Pitch value must be finite".to_string()));
+        }
+        let deck = self.deck_mut(deck_id)?;
+        let clamped = pitch_percent.clamp(-99.0, 100.0) as f32;
+        deck.set_pitch_percent(clamped);
         Ok(DeckState::from(&*deck))
     }
 

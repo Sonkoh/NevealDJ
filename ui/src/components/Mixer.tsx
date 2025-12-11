@@ -9,6 +9,7 @@ import {
 type DeckState = {
     id: number;
     volume: number;
+    pitchPercent: number;
     isPlaying?: boolean;
     loadedTrack?: string | null;
 };

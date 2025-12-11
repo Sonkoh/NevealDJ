@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('nevealdj', {
   loadDeck: (deckId, filePath) => ipcRenderer.invoke('engine:load-deck', { deckId, filePath }),
   toggleDeckPlayback: (deckId) => ipcRenderer.invoke('engine:toggle-playback', deckId),
   setDeckVolume: (deckId, volume) => ipcRenderer.invoke('engine:set-deck-volume', { deckId, volume }),
+  setDeckPitch: (deckId, pitchPercent) => ipcRenderer.invoke('engine:set-deck-pitch', { deckId, pitchPercent }),
   clearDeck: (deckId) => ipcRenderer.invoke('engine:clear-deck', deckId),
   listDirectories: (targetPath) => ipcRenderer.invoke('browser:list-directories', targetPath),
   getTrackMetadata: (filePath) => ipcRenderer.invoke('metadata:get-track', filePath),
