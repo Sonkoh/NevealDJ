@@ -180,6 +180,13 @@ impl DjEngine {
         deck.set_volume(normalized);
         Ok(DeckState::from(&*deck))
     }
+
+    #[napi]
+    pub fn clear_deck(&mut self, deck_id: u8) -> Result<DeckState> {
+        let deck = self.deck_mut(deck_id)?;
+        deck.clear_track();
+        Ok(DeckState::from(&*deck))
+    }
 }
 
 const HOT_CUES_STORAGE_KEY: &str = "NEVEALDJ::HOTCUES";

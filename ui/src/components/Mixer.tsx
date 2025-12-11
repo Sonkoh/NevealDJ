@@ -2,6 +2,7 @@ import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useS
 import {
     FILE_SELECTED_EVENT,
     dispatchAppError,
+    dispatchDeckTrackMetadata,
     type FileSelectedDetail,
 } from "../utils/appEvents";
 
@@ -83,14 +84,14 @@ function MixerFader({ deck, onVolumeChange, onLoadTrack, canLoad, isLoadingTrack
                     {[...Array(3)].map((_, idx) => (
                         <div
                             key={idx}
-                            className={`h-[1px] w-6 bg-gray-500`}
+                            className={`h-px w-6 bg-gray-500`}
                         />
                     ))}
                 </div>
                 <div
                     className="absolute left-1/2 w-6 h-2 bg-white rounded-xs shadow-lg -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                     style={{ top: faderTop }}
-                    aria-label={`${Math.round(safeVolume * 100)}%`}
+                    title={`${Math.round(safeVolume * 100)}%`}
                 />
             </div>
         </div>
@@ -201,6 +202,12 @@ function Mixer() {
             });
     }, []);
 
+    const extractFileName = (pathValue: string) => {
+        const normalized = pathValue.replace(/\\/g, "/");
+        const segments = normalized.split("/");
+        return segments.pop() || normalized;
+    };
+
     const handleLoadTrack = useCallback(
         async (deckId: number) => {
             if (!selectedFilePath) {
@@ -214,6 +221,23 @@ function Mixer() {
             setLoadingDeckId(deckId);
             try {
                 await api.loadDeck(deckId, selectedFilePath);
+                let metadata: any = null;
+                if (typeof api?.getTrackMetadata === "function") {
+                    try {
+                        metadata = await api.getTrackMetadata(selectedFilePath);
+                    } catch (metadataErr) {
+                        console.warn("Mixer: failed to fetch metadata", metadataErr);
+                    }
+                }
+
+                dispatchDeckTrackMetadata({
+                    deckId,
+                    title: metadata?.title ?? extractFileName(selectedFilePath),
+                    artist: metadata?.artist ?? null,
+                    bpm: metadata?.bpm ?? null,
+                    durationSeconds: metadata?.durationSeconds ?? null,
+                    path: selectedFilePath,
+                });
             } catch (err) {
                 console.error("Mixer: failed to load track", err);
                 dispatchAppError("No se pudo cargar la canción seleccionada", "Mixer");

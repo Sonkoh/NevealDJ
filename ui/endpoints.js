@@ -43,6 +43,8 @@ const broadcastEngineState = () => {
 
 const SUPPORTED_AUDIO_EXTENSIONS = new Set([".mp3", ".wav"]);
 
+const deckMetadataStore = new Map();
+
 const listDirectories = async (targetPath) => {
     const basePath = targetPath ? path.resolve(targetPath) : systemRoot;
     const entries = await fsp.readdir(basePath, { withFileTypes: true });
@@ -115,6 +117,13 @@ module.exports = () => {
         }
 
         engine.loadTrack(id, resolvedPath);
+        let metadata = null;
+        try {
+            metadata = getTrackMetadata(resolvedPath);
+        } catch (error) {
+            console.warn("[metadata] Failed to read track after load", error);
+        }
+        deckMetadataStore.set(id, metadata ? { ...metadata, path: resolvedPath } : null);
         const decks = engine.getDecks();
         broadcastEngineState();
         return decks;
@@ -126,6 +135,17 @@ module.exports = () => {
             throw new Error("Invalid deck id");
         }
         const deckState = engine.toggleDeckPlayback(id);
+        broadcastEngineState();
+        return deckState;
+    });
+
+    ipcMain.handle("engine:clear-deck", (_, deckId) => {
+        const id = Number(deckId);
+        if (!id || id < 1 || id > 6) {
+            throw new Error("Invalid deck id");
+        }
+        const deckState = engine.clearDeck(id);
+        deckMetadataStore.delete(id);
         broadcastEngineState();
         return deckState;
     });
@@ -174,6 +194,14 @@ module.exports = () => {
             throw new Error("No metadata updates provided");
         }
         return updateTrackMetadata(resolvedPath, updates);
+    });
+
+    ipcMain.handle("deck:get-track-metadata", (_, deckId) => {
+        const id = Number(deckId);
+        if (!id || id < 1 || id > 6) {
+            throw new Error("Invalid deck id");
+        }
+        return deckMetadataStore.get(id) ?? null;
     });
 
     ipcMain.handle("config:get", () => {

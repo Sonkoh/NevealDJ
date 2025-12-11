@@ -1,6 +1,11 @@
 import { useState, useRef, MouseEvent, useEffect, PointerEvent as ReactPointerEvent } from "react";
 import Icon from "./Icon";
 import expandWindow from "../hooks/ExpandWindow";
+import {
+    DECK_TRACK_EVENT,
+    type DeckTrackDetail,
+    subscribeToDeckTrackChannel,
+} from "../utils/appEvents";
 
 type DeckProps = {
     id: string | number;
@@ -18,8 +23,14 @@ function Deck({ id, disableExpand = false }: DeckProps) {
     const deckElement = useRef<HTMLElement>(null);
     const [deckData, setDeckData] = useState<DeckState | null>(null);
     const [pitch, setPitch] = useState<number>(0);
+    const [trackTitle, setTrackTitle] = useState<string>("No Track");
+    const [trackArtist, setTrackArtist] = useState<string | null>(null);
+    const [trackBpm, setTrackBpm] = useState<number | null>(null);
+    const [trackDuration, setTrackDuration] = useState<number | null>(null);
     const faderTrackRef = useRef<HTMLDivElement>(null);
-    const deckId = id;
+    const normalizedArtist = trackArtist?.trim();
+    const showArtist = Boolean(normalizedArtist && normalizedArtist.toLowerCase() !== "desconocido");
+    const deckId = Number(id);
 
     const requestDeckState = async () => {
         try {
@@ -59,6 +70,127 @@ function Deck({ id, disableExpand = false }: DeckProps) {
         };
     }, [deckId]);
 
+    const applyMetadata = (metadata: DeckTrackDetail | null | undefined) => {
+        if (!metadata) {
+            return;
+        }
+        if (metadata.title) {
+            setTrackTitle(metadata.title);
+        }
+        if (typeof metadata.artist !== "undefined") {
+            setTrackArtist(metadata.artist);
+        }
+        if (typeof metadata.bpm !== "undefined") {
+            setTrackBpm(
+                typeof metadata.bpm === "number" && Number.isFinite(metadata.bpm)
+                    ? metadata.bpm
+                    : null,
+            );
+        }
+        if (typeof metadata.durationSeconds !== "undefined") {
+            setTrackDuration(
+                typeof metadata.durationSeconds === "number" &&
+                    Number.isFinite(metadata.durationSeconds)
+                    ? metadata.durationSeconds
+                    : null,
+            );
+        }
+    };
+
+    useEffect(() => {
+        const api = (window as any).nevealdj;
+        if (deckData?.loadedTrack) {
+            setTrackTitle("");
+            setTrackArtist(null);
+            setTrackBpm(null);
+            setTrackDuration(null);
+            if (api?.getDeckTrackMetadata) {
+                api
+                    .getDeckTrackMetadata(deckId)
+                    .then((metadata: DeckTrackDetail | null) => {
+                        applyMetadata(metadata);
+                    })
+                    .catch((error: Error) => {
+                        console.warn("deck: failed to refresh metadata", error);
+                    });
+            }
+        } else {
+            setTrackTitle("No Track");
+            setTrackArtist(null);
+            setTrackBpm(null);
+            setTrackDuration(null);
+        }
+    }, [deckData?.loadedTrack, deckId]);
+
+    useEffect(() => {
+        const handleTrackMetadata = (event: Event) => {
+            const detail = (event as CustomEvent<DeckTrackDetail>).detail;
+            if (!detail || detail.deckId !== deckId) {
+                return;
+            }
+            applyMetadata(detail);
+        };
+
+        const unsubscribeBroadcast = subscribeToDeckTrackChannel((detail) => {
+            if (detail.deckId === deckId) {
+                applyMetadata(detail);
+            }
+        });
+
+        if (typeof window !== "undefined") {
+            window.addEventListener(DECK_TRACK_EVENT, handleTrackMetadata as EventListener);
+        }
+
+        return () => {
+            if (typeof window !== "undefined") {
+                window.removeEventListener(DECK_TRACK_EVENT, handleTrackMetadata as EventListener);
+            }
+            unsubscribeBroadcast();
+        };
+    }, [deckId]);
+
+    useEffect(() => {
+        const api = (window as any).nevealdj;
+        if (!api?.getDeckTrackMetadata) {
+            return;
+        }
+        let isMounted = true;
+        api
+            .getDeckTrackMetadata(deckId)
+            .then((metadata: DeckTrackDetail | null) => {
+                if (!isMounted || !metadata) {
+                    return;
+                }
+                if (metadata.title) {
+                    setTrackTitle(metadata.title);
+                }
+                if (typeof metadata.artist !== "undefined") {
+                    setTrackArtist(metadata.artist);
+                }
+                if (typeof metadata.bpm !== "undefined") {
+                    setTrackBpm(
+                        typeof metadata.bpm === "number" && Number.isFinite(metadata.bpm)
+                            ? metadata.bpm
+                            : null,
+                    );
+                }
+                if (typeof metadata.durationSeconds !== "undefined") {
+                    setTrackDuration(
+                        typeof metadata.durationSeconds === "number" &&
+                            Number.isFinite(metadata.durationSeconds)
+                            ? metadata.durationSeconds
+                            : null,
+                    );
+                }
+            })
+            .catch((error: Error) => {
+                console.warn("deck: failed to load metadata", error);
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [deckId]);
+
     const clampValue = (value: number, min: number, max: number) =>
         Math.min(max, Math.max(min, value));
 
@@ -81,6 +213,21 @@ function Deck({ id, disableExpand = false }: DeckProps) {
             }
         } catch (error) {
             console.error("failed to toggle playback", error);
+        }
+    };
+
+    const handleClearDeck = async () => {
+        try {
+            const updated = await (window as any).nevealdj?.clearDeck?.(deckId);
+            if (updated) {
+                setDeckData(updated);
+                setTrackTitle("Sin pista");
+                setTrackArtist(null);
+                setTrackBpm(null);
+                setTrackDuration(null);
+            }
+        } catch (error) {
+            console.error("failed to clear deck", error);
         }
     };
 
@@ -115,10 +262,33 @@ function Deck({ id, disableExpand = false }: DeckProps) {
 
     const faderPositionPercent = ((50 - pitch) / 100) * 100;
 
+    const formatDuration = (seconds?: number | null) => {
+        if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) {
+            return "--:--";
+        }
+        const totalSeconds = Math.floor(seconds);
+        const mins = Math.floor(totalSeconds / 60)
+            .toString()
+            .padStart(2, "0");
+        const secs = (totalSeconds % 60).toString().padStart(2, "0");
+        return `${mins}:${secs}`;
+    };
+
+    const formatBpm = (value?: number | null) => {
+        if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+            return "--";
+        }
+        const fixed = value.toFixed(2);
+        return fixed.endsWith(".00") ? value.toFixed(0) : fixed;
+    };
+
+    const durationLabel = formatDuration(trackDuration);
+    const bpmLabel = formatBpm(trackBpm);
+
     return (
         <main className="w-full" ref={deckElement}>
             <main className="flex-row">
-                <div className={`module-1 h-12 w-12 p-1 ${disableExpand ? '' : 'group'}`}>
+                <div className={`module-1 size-12 min-w-12 p-1 ${disableExpand ? '' : 'group'}`}>
                     <button
                         className={`flex flex-col items-center justify-center module-1 w-full h-full font-sans p-1 ${disableExpand ? 'border-2' : 'cursor-pointer'}`}
                         onClick={handleExpand}
@@ -136,18 +306,33 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                 </div>
                 <div className="module-1 w-full h-12 py-1 px-2 flex items-center justify-between gap-2">
                     <div>
-                        <h1 className="font-600 text-[1em] me-0">
-                            Nerver Back{" "}
-                            <span className="text-[.9em] text-gray-400 font-normal">
-                                - Ephesis<span className="text-gray-500">, Axiver</span>
-                            </span>
-                        </h1>
-                        <p className="text-[.9em] font-boblackld text-orange-200">07:29 129<span className="text-[.8em]">BPM</span> Cm</p>
-                        <p className="text-[.7em] text-gray-400 mt-1">
-                            {deckData?.loadedTrack ? `Track: ${deckData.loadedTrack}` : "Track: --"}
+                        <div className="overflow-x-hidden">
+                            <h1 className="font-600 text-[.8em] me-0 truncate">
+                                {trackTitle || "No Track"}
+                                {showArtist && (
+                                    <span className="text-[.85em] text-gray-400 font-normal">
+                                        {" "}
+                                        - <span className="text-gray-300">{normalizedArtist}</span>
+                                    </span>
+                                )}
+                            </h1>
+                        </div>
+                        <p className="text-[.9em] font-boblackld text-orange-200">
+                            {durationLabel} {bpmLabel}
+                            <span className="text-[.8em]"> BPM</span>
                         </p>
                     </div>
                 </div>
+                {deckData?.loadedTrack ? (
+                    <button
+                        className="border-0 module size-12 min-w-12 cursor-pointer active:bg-[#020409]"
+                        onClick={handleClearDeck}
+                    >
+                        <Icon name="eject_solid" className="size-6 text-gray-500" aria-hidden />
+                    </button>
+                ) : (
+                    <></>
+                )}
             </main>
             <main className="flex-row">
                 {["A", "B", "C", "D", "E", "F", "G", "H"].map((hotCue) => (

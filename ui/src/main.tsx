@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import Browser from './components/Browser.tsx';
 import TopBar from './components/TopBar.tsx';
-import BottomBar from './components/BottomBar.tsx';
 import System from './components/System.tsx';
 import Deck from './components/Deck.tsx';
 
