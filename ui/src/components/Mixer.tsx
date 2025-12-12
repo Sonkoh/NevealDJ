@@ -257,7 +257,7 @@ function Mixer() {
         <div className="module-1 w-[320px] h-full flex flex-col">
             <div className="flex-1 overflow-x-auto">
                 <div
-                    className={`flex h-full px-3 py-4 ${
+                    className={`flex h-full px-3 ${
                         hasDecks ? "min-w-max" : "items-center justify-center"
                     }`}
                 >

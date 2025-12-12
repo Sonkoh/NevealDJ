@@ -222,6 +222,40 @@ function Deck({ id, disableExpand = false }: DeckProps) {
         return clampValue(sliderValue, -100, 100);
     };
 
+    const calculateAdjustedBpm = (baseBpm?: number | null, percent?: number | null) => {
+        if (typeof baseBpm !== "number" || !Number.isFinite(baseBpm) || baseBpm <= 0) {
+            return null;
+        }
+        if (typeof percent !== "number" || !Number.isFinite(percent)) {
+            return Number(baseBpm);
+        }
+        const adjusted = baseBpm * (1 + percent / 100);
+        return Number.isFinite(adjusted) && adjusted > 0 ? adjusted : null;
+    };
+
+    const formatPlatterBpmParts = (value?: number | null): { main: string; decimals: string | null } => {
+        if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+            return { main: "", decimals: null };
+        }
+        const formatted = value.toFixed(2);
+        const [whole, decimals] = formatted.split(".");
+        return {
+            main: whole,
+            decimals: decimals ? `.${decimals}` : null,
+        };
+    };
+
+    const getDeckPitchPercent = () => {
+        if (deckData && typeof deckData === "object") {
+            const raw =
+                (deckData as any).pitchPercent ?? (deckData as any).pitch_percent ?? null;
+            if (typeof raw === "number" && Number.isFinite(raw)) {
+                return clampValue(raw, -100, 100);
+            }
+        }
+        return sliderToPitch(pitch);
+    };
+
     const handleExpand = (event: MouseEvent<HTMLButtonElement>) => {
         if (disableExpand) {
             return;
@@ -320,10 +354,7 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                 pitch_percent: targetPitch,
             };
         });
-        const targetBpm =
-            typeof trackBpm === "number" && Number.isFinite(trackBpm)
-                ? trackBpm * (1 + targetPitch / 100)
-                : null;
+        const targetBpm = calculateAdjustedBpm(trackBpm, targetPitch);
         if (targetBpm !== null) {
             console.log(
                 `Deck ${deckId} pitch slider: ${sliderValue}% -> pitch real: ${targetPitch.toFixed(
@@ -397,6 +428,9 @@ function Deck({ id, disableExpand = false }: DeckProps) {
 
     const durationLabel = formatDuration(trackDuration);
     const bpmLabel = formatBpm(trackBpm);
+    const currentPitchPercent = getDeckPitchPercent();
+    const adjustedBpm = calculateAdjustedBpm(trackBpm, currentPitchPercent);
+    const platterBpmParts = formatPlatterBpmParts(adjustedBpm);
 
     return (
         <main className={(parseInt(id.toString())) % 2 == 1 ? 'flex-row-reverse w-full' : 'flex-row w-full'} ref={deckElement}>
@@ -498,8 +532,21 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                                 </svg>
                             </div>
                             <div className="module-1 rounded-full shadow-lg">
+                                <div className="absolute size-[70px] flex rounded-full m-[15px] border-2 border-gray-800">
+                                    <div className="relative m-auto">
+                                        {platterBpmParts.main ? (
+                                            <>
+                                                <div className="font-sans font-bold tracking-[-1px] text-white">
+                                                    <span className="text-[1.1em]">{platterBpmParts.main}</span>
+                                                    <span className="text-[0.8em] leading-none">
+                                                        {platterBpmParts.decimals}
+                                                    </span>
+                                                </div>
+                                                <p className={(pitch != 0 ? "text-gray-300" : "text-gray-400") + " text-[.7em] -mt-0.5 text-center"}>{`${(pitch >= 0 ? "+" : "")}${pitch}%`} <span className="text-[.6em] -ml-0.5 text-gray-400">TMP</span></p></>
+                                        ) : ""}
+                                    </div>
+                                </div>
                                 <div className="col-start-1 row-start-1 size-[100px] rounded-full border-9 border-white mask-conic-from-95% mask-conic-to-95% cursor-grab active:cursor-grabbing">
-
                                 </div>
                             </div>
                         </div>
