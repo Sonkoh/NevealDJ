@@ -254,10 +254,10 @@ function Mixer() {
     const hasSelectedTrack = Boolean(selectedFilePath);
 
     return (
-        <div className="module-1 w-[320px] h-full flex flex-col">
+        <div className="module-1 h-full flex flex-col">
             <div className="flex-1 overflow-x-auto">
                 <div
-                    className={`flex h-full px-3 ${
+                    className={`flex h-full ${
                         hasDecks ? "min-w-max" : "items-center justify-center"
                     }`}
                 >

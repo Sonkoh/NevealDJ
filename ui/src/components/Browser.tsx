@@ -297,7 +297,7 @@ function Browser() {
                     </table>
                 </div>
             </div>
-            <div className="module-1">
+            <div className="module-1 px-2">
                 {statusMessage ? (
                     <div className="text-red-400 break-all">
                         {statusMessage.source ? `[${statusMessage.source}] ` : ""}

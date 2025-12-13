@@ -41,8 +41,29 @@ function Deck({ id, disableExpand = false }: DeckProps) {
     const isSendingPitchRef = useRef(false);
     const desiredPitchRef = useRef<number | null>(null);
     const faderTrackRef = useRef<HTMLDivElement>(null);
+    const titleScrollContainerRef = useRef<HTMLDivElement>(null);
+    const titleContentRef = useRef<HTMLHeadingElement>(null);
+    const titleScrollAnimationRef = useRef<number | null>(null);
+    let interval: any;
+    const handleTitleMouseEnter = useCallback(async () => {
+        interval = setInterval(() => {
+            if (!titleContentRef.current)
+                return;
+            if (titleContentRef.current && Math.ceil(titleContentRef.current.scrollLeft + titleContentRef.current.clientWidth) >= titleContentRef.current.scrollWidth)
+                return clearInterval(interval);
+            titleContentRef.current.scrollLeft++;
+        }, 50)
+    }, []);
+    const handleTitleMouseLeave = useCallback(() => {
+        clearInterval(interval);
+        if (!titleContentRef.current)
+            return;
+        titleContentRef.current.scrollLeft = 0;
+
+    }, []);
     const pitchTicks = Array.from({ length: 21 }, (_, idx) => idx);
     const centerTickIndex = Math.floor(pitchTicks.length / 2);
+    const [isTitleOverflowing, setIsTitleOverflowing] = useState(false);
     const normalizedArtist = trackArtist?.trim();
     const showArtist = Boolean(normalizedArtist && normalizedArtist.toLowerCase() !== "desconocido");
     const deckId = Number(id);
@@ -209,6 +230,7 @@ function Deck({ id, disableExpand = false }: DeckProps) {
     const clampValue = (value: number, min: number, max: number) =>
         Math.min(max, Math.max(min, value));
     const pitchCurve = 2;
+    const TITLE_SCROLL_SPEED_PX_PER_SEC = 10;
     const sliderToPitch = (sliderValue: number) => {
         const normalized = Math.abs(sliderValue) / 100;
         const curved = Math.pow(normalized, pitchCurve);
@@ -221,6 +243,16 @@ function Deck({ id, disableExpand = false }: DeckProps) {
         const sliderValue = Math.sign(pitchValue) * curved * 100;
         return clampValue(sliderValue, -100, 100);
     };
+
+    const updateTitleOverflow = useCallback(() => {
+        const container = titleScrollContainerRef.current;
+        if (!container) {
+            setIsTitleOverflowing(false);
+            return;
+        }
+        const needsScroll = container.scrollWidth - container.clientWidth > 1;
+        setIsTitleOverflowing(needsScroll);
+    }, []);
 
     const calculateAdjustedBpm = (baseBpm?: number | null, percent?: number | null) => {
         if (typeof baseBpm !== "number" || !Number.isFinite(baseBpm) || baseBpm <= 0) {
@@ -317,6 +349,78 @@ function Deck({ id, disableExpand = false }: DeckProps) {
 
         setPitch(Math.round(pitchToSlider(rawPitch)));
     }, [deckData, isPitchDragging]);
+
+    useEffect(() => {
+        const handleResize = () => updateTitleOverflow();
+        updateTitleOverflow();
+        if (typeof window !== "undefined") {
+            window.addEventListener("resize", handleResize);
+            return () => {
+                window.removeEventListener("resize", handleResize);
+            };
+        }
+        return;
+    }, [updateTitleOverflow]);
+
+    useEffect(() => {
+        const container = titleScrollContainerRef.current;
+        if (container) {
+            container.scrollLeft = 0;
+        }
+        if (typeof window === "undefined") {
+            updateTitleOverflow();
+            return;
+        }
+        const frame = window.requestAnimationFrame(() => updateTitleOverflow());
+        return () => {
+            window.cancelAnimationFrame(frame);
+        };
+    }, [trackTitle, normalizedArtist, showArtist, updateTitleOverflow]);
+
+    useEffect(() => {
+        const container = titleScrollContainerRef.current;
+        if (!container || typeof window === "undefined") {
+            return;
+        }
+        if (!isTitleOverflowing) {
+            container.scrollLeft = 0;
+            if (titleScrollAnimationRef.current !== null) {
+                window.cancelAnimationFrame(titleScrollAnimationRef.current);
+                titleScrollAnimationRef.current = null;
+            }
+            return;
+        }
+        container.scrollLeft = 0;
+        let lastTimestamp: number | null = null;
+        const speedPerMs = TITLE_SCROLL_SPEED_PX_PER_SEC / 1000;
+
+        const step = (timestamp: number) => {
+            const node = titleScrollContainerRef.current;
+            if (!node) {
+                return;
+            }
+            if (lastTimestamp === null) {
+                lastTimestamp = timestamp;
+            }
+            const delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            node.scrollLeft += delta * speedPerMs;
+            if (node.scrollLeft + node.clientWidth >= node.scrollWidth) {
+                node.scrollLeft = 0;
+                lastTimestamp = null;
+            }
+            titleScrollAnimationRef.current = window.requestAnimationFrame(step);
+        };
+
+        titleScrollAnimationRef.current = window.requestAnimationFrame(step);
+
+        return () => {
+            if (titleScrollAnimationRef.current !== null) {
+                window.cancelAnimationFrame(titleScrollAnimationRef.current);
+                titleScrollAnimationRef.current = null;
+            }
+        };
+    }, [isTitleOverflowing, trackTitle, normalizedArtist, showArtist, TITLE_SCROLL_SPEED_PX_PER_SEC]);
 
     const flushPitchQueue = useCallback(async function flush() {
         if (isSendingPitchRef.current) {
@@ -452,10 +556,18 @@ function Deck({ id, disableExpand = false }: DeckProps) {
                             )}
                         </button>
                     </div>
-                    <div className="module-1 w-full h-12 py-1 px-2 flex items-center justify-between gap-2">
-                        <div>
-                            <div className="overflow-x-hidden">
-                                <h1 className="font-600 text-[.8em] me-0 truncate">
+                    <div className="module-1 w-full h-12 py-1 px-2 flex items-center justify-between gap-2 flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
+                            <div
+                                className="grid overflow-hidden min-w-0"
+                                ref={titleScrollContainerRef}
+                            >
+                                <h1
+                                    ref={titleContentRef}
+                                    onMouseEnter={handleTitleMouseEnter}
+                                    onMouseLeave={handleTitleMouseLeave}
+                                    className="font-600 text-[.8em] me-0 whitespace-nowrap w-auto max-w-full overflow-x-scroll scrollbar-hide"
+                                >
                                     {trackTitle || "No Track"}
                                     {showArtist && (
                                         <span className="text-[.85em] text-gray-400 font-normal">
@@ -579,6 +691,7 @@ function Deck({ id, disableExpand = false }: DeckProps) {
             </div>
 
         </main>
+
     );
 }
 

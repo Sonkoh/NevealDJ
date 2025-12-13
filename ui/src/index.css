@@ -1,5 +1,6 @@
 @import "tailwindcss/theme";
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+@import 'tailwind-scrollbar-hide/v4';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -22,6 +23,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  user-select: none;
 }
 
 #root {
